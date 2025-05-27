@@ -32,4 +32,10 @@ def chat_endpoint(body: ChatRequest):
                 "finish_reason": "stop"
             }
         ]
-    }
+    }    
+@app.get("/v1/models")
+def list_models():
+    # Ollama에 등록된 모델 목록 요청
+    response = requests.get("http://ollama:11434/api/tags").json()
+    models = [{"id": m["name"], "object": "model"} for m in response.get("models", [])]
+    return {"data": models, "object": "list"}        

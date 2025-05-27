@@ -1,0 +1,39 @@
+# =========================================
+# 🐳 docker-compose.yml (Open WebUI + Ollama + REST 서버)
+# =========================================
+version: '3.9'
+
+services:
+  ### Ollama 서버 (로컬 LLM 실행)
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    container_name: ollama
+
+  ### 커스텀 OpenAI 호환 REST 서버 (FastAPI)
+  llm-api:
+    build: ./llm-api
+    ports:
+      - "8080:8080"
+    container_name: llm-api
+    depends_on:
+      - ollama
+
+  ### Open WebUI (Web 프론트엔드)
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    ports:
+      - "3000:3000"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - DEFAULT_OPENAI_API_BASE=http://llm-api:8080/v1
+      - DEFAULT_OPENAI_API_KEY=dummy-key
+    depends_on:
+      - ollama
+      - llm-api
+
+volumes:
+  ollama_models:
